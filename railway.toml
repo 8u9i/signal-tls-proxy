@@ -4,5 +4,6 @@
 
 [deploy]
   healthcheckPath = "/health"
+  healthcheckPort = 8080
   healthcheckTimeout = 300
   restartPolicyType = "always"
