@@ -12,12 +12,13 @@ if [ ! -e "$CERTS_DIR/options-ssl-nginx.conf" ] || [ ! -e "$CERTS_DIR/ssl-dhpara
     curl -s https://raw.githubusercontent.com/certbot/certbot/main/certbot/src/certbot/ssl-dhparams.pem > "$CERTS_DIR/ssl-dhparams.pem"
 fi
 
-echo "### Requesting Let's Encrypt certificate for $domain via DNS-01 ..."
-echo "Certbot will give you a TXT record value. Add it to your DNS, then press Enter."
-echo ""
+echo "### Stopping nginx to free port 443 ..."
+nginx -s stop 2>/dev/null || true
+sleep 1
 
-certbot certonly --manual \
-    --preferred-challenges dns \
+echo "### Requesting Let's Encrypt certificate for $domain (TLS-ALPN-01 on port 443) ..."
+certbot certonly --standalone \
+    --preferred-challenges tls-alpn-01 \
     --register-unsafely-without-email \
     -d "$domain" \
     --agree-tos \
@@ -26,6 +27,9 @@ certbot certonly --manual \
 echo "### Symlinking active certificate ..."
 rm -f "$CERTS_DIR/active"
 ln -sf "/etc/letsencrypt/live/$domain" "$CERTS_DIR/active"
+
+echo "### Restarting nginx ..."
+nginx
 
 echo ""
 echo "Certificate obtained! Share your proxy as: https://signal.tube/#$domain"
